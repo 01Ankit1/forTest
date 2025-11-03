@@ -1,6 +1,7 @@
 from fastmcp import FastMCP,Context
 import os
 import tempfile
+from fastapi import Request
 
 from fastmcp import FastMCP, Context
 from scalekit import ScalekitClient
@@ -57,11 +58,11 @@ async def oauth_server_metadata():
     }
 
 
-@mcp.custom_route("/.well-known/oauth-protected-resource/mcp", methods=["GET"])
+@mcp.app.get("/.well-known/oauth-protected-resource/mcp")
 async def oauth_protected_resource_metadata():
     """
     OAuth 2.0 Protected Resource Metadata endpoint for MCP client discovery.
-    Required by the MCP specification for authorization server discovery.
+    This must be PUBLIC — no Bearer token required.
     """
 
     return {"authorization_servers":["https://paytm.scalekit.dev/resources/res_97420808191740418"],"bearer_methods_supported":["header"],"resource":"https://forTest.fastmcp.app/mcp","resource_documentation":"https://forTest.fastmcp.app/mcp/docs","scopes_supported":["user:read","user:write"]}
