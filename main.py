@@ -127,8 +127,8 @@ combined.mount("/", mcp_app)
 
 def main():
     """Main entry point for the MCP server."""
-    logger.info(f"Server running on http://0.0.0.0:{8000} (MCP at /)")
-    uvicorn.run(combined, host="localhost", port=8000, log_level="debug")
+    logger.info(f"Server running on http://0.0.0.0:{8080} (MCP at /)")
+    uvicorn.run(combined, host="0.0.0.0", port=8080, log_level="debug")
 
 if __name__ == "__main__":
     main()
