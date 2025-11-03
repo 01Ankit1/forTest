@@ -40,7 +40,7 @@ async def whatISThePSyco(ctx: Context = None)->int:
     await validate_request_token(ctx)
     return 10
 
-@mcp.custom_route("/.well-known/oauth-protected-resource/mcp")
+@mcp.custom_route("/.well-known/oauth-protected-resource/mcp", methods=["GET"])
 async def oauth_protected_resource_metadata():
     """
     OAuth 2.0 Protected Resource Metadata endpoint for MCP client discovery.
