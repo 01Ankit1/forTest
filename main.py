@@ -67,4 +67,4 @@ combined.mount("", public_app)         # Well-known route (public)
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(combined, host="0.0.0.0", port=8001)
+    uvicorn.run(combined, host="0.0.0.0", port=8002)
