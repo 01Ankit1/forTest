@@ -101,7 +101,8 @@ combined.add_middleware(
 )
 
 # Instead of mounting mcp_app, wrap it
-mcp_app = mcp.http_app()
+mcp_app = mcp.http_app(path="/")
+combined.mount("/", mcp_app)
 
 # Public metadata
 @combined.get("/.well-known/oauth-protected-resource/mcp")
@@ -114,9 +115,16 @@ async def oauth_meta():
         "scopes_supported": ["user:read", "user:write"],
     }
 
+@combined.get("/health")
+async def health_check():
+    return {
+        "status": "healthy",
+    }
+
 
 def main():
     """Main entry point for the MCP server."""
+    logger.info(f"Server running on http://0.0.0.0:{8000} (MCP at /)")
     uvicorn.run(combined, host="localhost", port=8000, log_level="debug")
 
 if __name__ == "__main__":
