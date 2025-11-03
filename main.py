@@ -140,5 +140,5 @@ async def on_shutdown():
 
 # --------------------- Run Server ---------------------
 if __name__ == "__main__":
-    logger.info("[SYSTEM] Starting combined app on port 8002...")
-    uvicorn.run("main:combined", host="0.0.0.0", port=8002, reload=False)
+    logger.info("[SYSTEM] Starting combined app on port 8000...")
+    uvicorn.run("main:combined", host="0.0.0.0", port=8000, reload=False)
