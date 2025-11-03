@@ -20,7 +20,8 @@ logging.basicConfig(
 logger = logging.getLogger("middleware_logger")
 
 # --------------------- MCP + Scalekit Setup ---------------------
-mcp = FastMCP("ExpenseTracker")
+mcp = FastMCP("ExpenseTracker",stateless_http=True)
+
 _scalekit_client = ScalekitClient(
     "https://paytm.scalekit.dev",
     "m2m_97422068261325572",
@@ -71,6 +72,17 @@ class AuthMiddleware(BaseHTTPMiddleware):
         logger.info("=" * 100)
         return response
 
+combined = FastAPI(title="test")
+
+# Middlewares
+combined.add_middleware("http")(AuthMiddleware)
+combined.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # --------------------- MCP Tools ---------------------
 @mcp.tool()
 async def addNumber(a: int, b: int, ctx: Context = None):
@@ -87,25 +99,7 @@ async def whatISThePSyco(ctx: Context = None):
     logger.info("[TOOL:whatISThePSyco] Called.")
     return 10
 
-# --------------------- Combined App ---------------------
-combined = FastAPI(title="test")
-
-# Middlewares
-combined.add_middleware(AuthMiddleware)
-combined.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Instead of mounting mcp_app, wrap it
-mcp_app = mcp.http_app(path="/")
-combined.mount("/", mcp_app)
-
-# Public metadata
-@combined.get("/.well-known/oauth-protected-resource/mcp")
+@combined.get("/.well-known/oauth-protected-resource")
 async def oauth_meta():
     logger.info("[PUBLIC] OAuth metadata requested.")
     return {
@@ -120,6 +114,15 @@ async def health_check():
     return {
         "status": "healthy",
     }
+# --------------------- Combined App ---------------------
+
+
+# Instead of mounting mcp_app, wrap it
+mcp_app = mcp.http_app(path="/")
+combined.mount("/", mcp_app)
+
+# Public metadata
+
 
 
 def main():
