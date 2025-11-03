@@ -194,10 +194,14 @@ combined.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+mcp_app=mcp.http_app()
+mcp_app.add_middleware(AuthMiddleware)
 
 # Mount apps properly
-combined.mount("/mcp", mcp.http_app())
+combined.mount("/mcp", mcp_app)
 combined.mount("/.well-known", public_app)
+
+
 
 
 # ---------------------------------------------------------------------------
