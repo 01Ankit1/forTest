@@ -14,7 +14,7 @@ mcp = FastMCP("ExpenseTracker")
 
 # Initialize Scalekit client
 _scalekit_client = ScalekitClient(
-    "https://paytm.scalekit.dev/resources/res_97420808191740418",
+    "https://paytm.scalekit.dev",
     "m2m_97422068261325572",
     "test_8c5ODRZ6DCsNzOdVSRSxrVja3ccDGdAAQlgbOybPqfAVzBvhngce3NiUNuEssLAQ"
 
