@@ -62,7 +62,9 @@ from fastapi.middleware.wsgi import WSGIMiddleware
 from fastapi import FastAPI
 
 combined = FastAPI()
-combined.mount("/", mcp.asgi_app)      # MCP routes (protected)
+mcp_app = mcp.streamable_http_app()
+
+combined.mount("/mcp", mcp.mcp_app)      # MCP routes (protected)
 combined.mount("", public_app)         # Well-known route (public)
 
 if __name__ == "__main__":
