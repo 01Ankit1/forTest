@@ -75,7 +75,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
 combined = FastAPI(title="test")
 
 # Middlewares
-combined.add_middleware("http")(AuthMiddleware)
+combined.add_middleware(AuthMiddleware)
 combined.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
