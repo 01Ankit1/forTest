@@ -1,10 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastmcp import FastMCP, Context
 from scalekit import ScalekitClient
 from scalekit.common.scalekit import TokenValidationOptions
-from fastapi import HTTPException
 
+# ---  FASTMCP INSTANCE  ---
 mcp = FastMCP("ExpenseTracker")
 
 # ---  PUBLIC FASTAPI APP FOR WELL-KNOWN ENDPOINTS  ---
@@ -43,29 +43,30 @@ async def validate_request_token(ctx: Context):
     return True
 
 @mcp.tool()
-async def addNumber(a:int, b:int, ctx:Context=None)->int:
+async def addNumber(a: int, b: int, ctx: Context = None) -> int:
     await validate_request_token(ctx)
     return a + b + 10
 
 @mcp.tool()
-async def tellMeData(ctx:Context=None)->int:
+async def tellMeData(ctx: Context = None) -> int:
     await validate_request_token(ctx)
     return 10
 
 @mcp.tool()
-async def whatISThePSyco(ctx:Context=None)->int:
+async def whatISThePSyco(ctx: Context = None) -> int:
     await validate_request_token(ctx)
     return 10
 
 # ---  COMBINE BOTH ASGI APPS  ---
-from fastapi.middleware.wsgi import WSGIMiddleware
-from fastapi import FastAPI
-
+# streamable_http_app() -> deprecated
+# use http_app() instead, and mount it directly
 combined = FastAPI()
-mcp_app = mcp.streamable_http_app()
 
-combined.mount("/mcp", mcp.mcp_app)      # MCP routes (protected)
-combined.mount("", public_app)         # Well-known route (public)
+mcp_app = mcp.http_app()  # ✅ new API replaces streamable_http_app()
+
+# Mount correctly
+combined.mount("/mcp", mcp_app)      # MCP routes (protected)
+combined.mount("", public_app)       # Public routes
 
 if __name__ == "__main__":
     import uvicorn
