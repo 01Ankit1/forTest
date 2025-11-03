@@ -30,8 +30,8 @@ _scalekit_client = ScalekitClient(
 
 class Settings:
     SCALEKIT_ENVIRONMENT_URL = "https://paytm.scalekit.dev"
-    SCALEKIT_AUDIENCE_NAME = "https://forTest.fastmcp.app/mcp"
-    SCALEKIT_RESOURCE_METADATA_URL = "https://forTest.fastmcp.app/.well-known/oauth-protected-resource/mcp"
+    SCALEKIT_AUDIENCE_NAME = "https://forTest.fastmcp.app"
+    SCALEKIT_RESOURCE_METADATA_URL = "https://forTest.fastmcp.app/.well-known/oauth-protected-resource"
 
 settings = Settings()
 
@@ -107,7 +107,7 @@ async def oauth_meta():
     return {
         "authorization_servers": ["https://paytm.scalekit.dev/resources/res_97420808191740418"],
         "bearer_methods_supported": ["header"],
-        "resource": "https://forTest.fastmcp.app/mcp",
+        "resource": "https://forTest.fastmcp.app",
         "scopes_supported": ["user:read", "user:write"],
     }
 
