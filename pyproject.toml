@@ -6,4 +6,7 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "fastmcp>=2.13.0.2",
+    "scalekit-sdk-python>=2.4.10",
+    "requests>=2.32.5"
 ]
+
