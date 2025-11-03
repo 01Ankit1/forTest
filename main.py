@@ -172,7 +172,7 @@ combined.add_middleware(
 )
 
 combined.mount("/mcp", mcp_app)
-combined.mount("", public_app)
+combined.mount("/mcp", public_app)
 
 
 # ---  STARTUP / SHUTDOWN LOGGING  ---
