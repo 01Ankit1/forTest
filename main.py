@@ -12,22 +12,36 @@ from fastmcp import FastMCP, Context
 from scalekit import ScalekitClient
 from scalekit.common.scalekit import TokenValidationOptions
 
-# --- LOGGER SETUP ---
+
+# ---------------------------------------------------------------------------
+# LOGGER SETUP
+# ---------------------------------------------------------------------------
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
 )
-logger = logging.getLogger("middleware_logger")
 
-# ---  FASTMCP INSTANCE  ---
+logger = logging.getLogger("middleware_logger")
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter("%(asctime)s | %(levelname)s | %(name)s | %(message)s"))
+logger.addHandler(console_handler)
+logger.propagate = False
+
+
+# ---------------------------------------------------------------------------
+# FASTMCP INSTANCE
+# ---------------------------------------------------------------------------
 mcp = FastMCP("ExpenseTracker")
 
-# ---  PUBLIC FASTAPI APP FOR WELL-KNOWN ENDPOINTS  ---
+
+# ---------------------------------------------------------------------------
+# PUBLIC FASTAPI APP FOR WELL-KNOWN ENDPOINTS
+# ---------------------------------------------------------------------------
 public_app = FastAPI()
 security = HTTPBearer()
 
 
-@public_app.get("/.well-known/oauth-protected-resource/mcp")
+@public_app.get("/oauth-protected-resource/mcp")
 async def oauth_protected_resource_metadata():
     """Public metadata endpoint (no auth required)."""
     logger.info("[PUBLIC] Metadata endpoint hit.")
@@ -44,7 +58,9 @@ async def oauth_protected_resource_metadata():
     return JSONResponse(content=data)
 
 
-# ---  SCALEKIT CLIENT  ---
+# ---------------------------------------------------------------------------
+# SCALEKIT CLIENT
+# ---------------------------------------------------------------------------
 _scalekit_client = ScalekitClient(
     "https://paytm.scalekit.dev",
     "m2m_97422068261325572",
@@ -52,7 +68,9 @@ _scalekit_client = ScalekitClient(
 )
 
 
-# ---  SETTINGS  ---
+# ---------------------------------------------------------------------------
+# SETTINGS
+# ---------------------------------------------------------------------------
 class Settings:
     SCALEKIT_ENVIRONMENT_URL = "https://paytm.scalekit.dev"
     SCALEKIT_AUDIENCE_NAME = "https://forTest.fastmcp.app/mcp"
@@ -64,7 +82,9 @@ class Settings:
 settings = Settings()
 
 
-# ---  AUTH MIDDLEWARE WITH LOGGING  ---
+# ---------------------------------------------------------------------------
+# AUTH MIDDLEWARE WITH DETAILED LOGGING
+# ---------------------------------------------------------------------------
 class AuthMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         start_time = time.time()
@@ -137,7 +157,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
         return response
 
 
-# ---  MCP TOOLS WITH LOGGING  ---
+# ---------------------------------------------------------------------------
+# MCP TOOLS WITH LOGGING
+# ---------------------------------------------------------------------------
 @mcp.tool()
 async def addNumber(a: int, b: int, ctx: Context = None) -> int:
     logger.info(f"[TOOL:addNumber] Called with a={a}, b={b}")
@@ -158,10 +180,12 @@ async def whatISThePSyco(ctx: Context = None) -> int:
     return 10
 
 
-# ---  COMBINE BOTH ASGI APPS  ---
+# ---------------------------------------------------------------------------
+# COMBINED ASGI APP
+# ---------------------------------------------------------------------------
 combined = FastAPI()
 
-mcp_app = mcp.http_app()
+# Middleware setup
 combined.add_middleware(AuthMiddleware)
 combined.add_middleware(
     CORSMiddleware,
@@ -171,11 +195,22 @@ combined.add_middleware(
     allow_headers=["*"],
 )
 
-combined.mount("/mcp", mcp_app)
-combined.mount("/mcp", public_app)
+# Mount apps properly
+combined.mount("/mcp", mcp.http_app())
+combined.mount("/.well-known", public_app)
 
 
-# ---  STARTUP / SHUTDOWN LOGGING  ---
+# ---------------------------------------------------------------------------
+# ROOT ENDPOINT
+# ---------------------------------------------------------------------------
+@combined.get("/")
+async def root():
+    return {"status": "ExpenseTracker API is running", "docs": "/.well-known/oauth-protected-resource/mcp"}
+
+
+# ---------------------------------------------------------------------------
+# STARTUP / SHUTDOWN EVENTS
+# ---------------------------------------------------------------------------
 @combined.on_event("startup")
 async def startup_event():
     logger.info("[SYSTEM] Application startup complete.")
@@ -186,7 +221,9 @@ async def shutdown_event():
     logger.info("[SYSTEM] Application shutdown initiated.")
 
 
-# ---  MAIN ENTRY POINT  ---
+# ---------------------------------------------------------------------------
+# MAIN ENTRY POINT
+# ---------------------------------------------------------------------------
 if __name__ == "__main__":
     logger.info("[SYSTEM] Starting server on port 8002...")
-    uvicorn.run(combined, host="0.0.0.0", port=8002)
+    uvicorn.run(combined, host="0.0.0.0", port=8002, log_level="info")
