@@ -88,7 +88,7 @@ async def whatISThePSyco(ctx: Context = None):
     return 10
 
 # --------------------- Combined App ---------------------
-combined = FastAPI(title="ExpenseTracker Combined")
+combined = FastAPI(title="test")
 
 # Middlewares
 combined.add_middleware(AuthMiddleware)
@@ -103,14 +103,6 @@ combined.add_middleware(
 # Instead of mounting mcp_app, wrap it
 mcp_app = mcp.http_app()
 
-@combined.api_route("/mcp/{full_path:path}", methods=["GET", "POST", "PUT", "DELETE"])
-async def mcp_proxy(request: Request, full_path: str):
-    """Proxy all /mcp calls through our middleware."""
-    logger.info(f"[PROXY] Handling MCP path: /mcp/{full_path}")
-    response = await mcp_app(request.scope, request.receive, request._send)
-    logger.info(f"[PROXY] MCP response processed.")
-    return response
-
 # Public metadata
 @combined.get("/.well-known/oauth-protected-resource/mcp")
 async def oauth_meta():
@@ -122,23 +114,10 @@ async def oauth_meta():
         "scopes_supported": ["user:read", "user:write"],
     }
 
-# Root
-@combined.get("/")
-async def root():
-    logger.info("[ROOT] Root endpoint hit.")
-    return {"status": "ExpenseTracker running", "routes": [r.path for r in combined.routes]}
 
-# Lifecycle
-@combined.on_event("startup")
-async def on_startup():
-    logger.info("[SYSTEM] 🚀 Startup complete.")
-    logger.info(f"[SYSTEM] Active routes: {[r.path for r in combined.routes]}")
+def main():
+    """Main entry point for the MCP server."""
+    uvicorn.run(combined, host="localhost", port=8000, log_level="debug")
 
-@combined.on_event("shutdown")
-async def on_shutdown():
-    logger.info("[SYSTEM] 🛑 Shutdown triggered.")
-
-# --------------------- Run Server ---------------------
 if __name__ == "__main__":
-    logger.info("[SYSTEM] Starting combined app on port 8000...")
-    uvicorn.run("main:combined", host="0.0.0.0", port=8000, reload=False)
+    main()
