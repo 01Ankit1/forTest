@@ -4,7 +4,7 @@ import tempfile
 
 from fastmcp import FastMCP, Context
 from scalekit import ScalekitClient
-from scalekit.types import TokenValidationOptions
+from scalekit.common.scalekit import TokenValidationOptions
 from fastapi import HTTPException
 import os
 import tempfile
