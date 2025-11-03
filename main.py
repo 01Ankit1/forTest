@@ -41,23 +41,23 @@ class AuthMiddleware(BaseHTTPMiddleware):
         logger.info("=" * 100)
         logger.info(f"[AUTH-MW] Incoming: {request.method} {request.url.path}")
 
-        if request.url.path.startswith("/.well-known"):
+        if ".well-known" in request.url.path :
             return await call_next(request)
 
         try:
-            auth_header = request.headers.get("Authorization")
+            auth_header = request.headers.get("authorization")
             if not auth_header or not auth_header.startswith("Bearer "):
                 logger.warning("[AUTH-MW] Missing Authorization header.")
                 raise HTTPException(status_code=401, detail="Missing or invalid Authorization header.")
 
-            token = auth_header.split(" ")[1]
+            token = auth_header.split("Bearer ")[1].strip()
             logger.info(f"[AUTH-MW] Token prefix: {token[:10]}...")
 
             validation_opts = TokenValidationOptions(
                 issuer=settings.SCALEKIT_ENVIRONMENT_URL,
                 audience=[settings.SCALEKIT_AUDIENCE_NAME],
             )
-            _scalekit_client.validate_token(token, options=validation_opts)
+            _scalekit_client.validate_access_token(token, options=validation_opts)
             logger.info("[AUTH-MW] ✅ Token validated OK.")
 
         except Exception as e:
@@ -72,16 +72,18 @@ class AuthMiddleware(BaseHTTPMiddleware):
         logger.info("=" * 100)
         return response
 
-combined = FastAPI(title="test")
+app = FastAPI(title="test")
 
 # Middlewares
-combined.add_middleware(AuthMiddleware)
-combined.add_middleware(
+app.middleware("http")(AuthMiddleware)
+app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["WWW-Authenticate"],
+    max_age=86400,
 )
 # --------------------- MCP Tools ---------------------
 @mcp.tool()
@@ -99,7 +101,7 @@ async def whatISThePSyco(ctx: Context = None):
     logger.info("[TOOL:whatISThePSyco] Called.")
     return 10
 
-@combined.get("/.well-known/oauth-protected-resource")
+@app.get("/.well-known/oauth-protected-resource")
 async def oauth_meta():
     logger.info("[PUBLIC] OAuth metadata requested.")
     return {
@@ -109,17 +111,16 @@ async def oauth_meta():
         "scopes_supported": ["user:read", "user:write"],
     }
 
-@combined.get("/health")
+@app.get("/health")
 async def health_check():
     return {
         "status": "healthy",
     }
-# --------------------- Combined App ---------------------
 
 
 # Instead of mounting mcp_app, wrap it
 mcp_app = mcp.http_app(path="/")
-combined.mount("/", mcp_app)
+app.mount("/", mcp_app)
 
 # Public metadata
 
@@ -128,7 +129,7 @@ combined.mount("/", mcp_app)
 def main():
     """Main entry point for the MCP server."""
     logger.info(f"Server running on http://0.0.0.0:{8080} (MCP at /)")
-    uvicorn.run(combined, host="0.0.0.0", port=8080, log_level="debug")
+    uvicorn.run(app, host="0.0.0.0", port=8080, log_level="debug")
 
 if __name__ == "__main__":
     main()
