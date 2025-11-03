@@ -40,6 +40,23 @@ async def whatISThePSyco(ctx: Context = None)->int:
     await validate_request_token(ctx)
     return 10
 
+@mcp.custom_route("/.well-known/openid-configuration", methods=["GET"])
+async def oauth_server_metadata():
+    """
+    Exposes OAuth 2.0 Authorization Server discovery metadata for Scalekit.
+    Lets ChatGPT and clients auto-discover endpoints like authorize/token.
+    """
+    return {
+        "issuer": "https://paytm.scalekit.dev",
+        "authorization_endpoint": "https://paytm.scalekit.dev/authorize",
+        "token_endpoint": "https://paytm.scalekit.dev/token",
+        "scopes_supported": ["user:read", "user:write"],
+        "response_types_supported": ["code"],
+        "grant_types_supported": ["authorization_code", "refresh_token"],
+        "token_endpoint_auth_methods_supported": ["client_secret_basic"]
+    }
+
+
 @mcp.custom_route("/.well-known/oauth-protected-resource/mcp", methods=["GET"])
 async def oauth_protected_resource_metadata():
     """
